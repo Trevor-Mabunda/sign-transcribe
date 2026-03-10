@@ -1,4 +1,4 @@
-# SignaTranslate - Complete Setup Guide
+# Sign - Complete Setup Guide
 
 ## 📋 Prerequisites
 

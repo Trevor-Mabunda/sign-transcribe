@@ -19,8 +19,8 @@ login_manager.init_app(app)
 login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page.'
 
-# Initialize sign detector (mock for development)
-sign_detector = initialize_detector(use_mock=True)
+# Initialize sign detector (real-time hand tracking with MediaPipe)
+sign_detector = initialize_detector()
 
 
 @login_manager.user_loader
@@ -422,20 +422,53 @@ def analytics():
 @app.route('/api/transcribe', methods=['POST'])
 @login_required
 def api_transcribe():
-    """API endpoint for real-time transcription"""
-    data = request.get_json()
-    
-    if not data or 'frame' not in data:
-        return jsonify({'error': 'No frame data provided'}), 400
-    
-    # Detect sign in frame
-    detection = sign_detector.detect_signs(None)
-    
-    return jsonify({
-        'status': 'success',
-        'detected_sign': detection['detected_sign'],
-        'confidence': detection['confidence']
-    })
+    """
+    API endpoint for real-time transcription with hand gesture detection
+    Only responds when hands are actually detected in the frame
+    """
+    try:
+        # Check if frame data is provided
+        if 'frame' not in request.files:
+            return jsonify({
+                'status': 'no_hand',
+                'message': 'No frame data',
+                'hands_detected': 0,
+                'detected_sign': None
+            }), 200
+        
+        # Read frame from request
+        frame_file = request.files['frame']
+        frame_stream = frame_file.stream
+        frame_data = frame_stream.read()
+        
+        # Detect hand gestures in frame
+        detection = sign_detector.detect_signs(frame_data)
+        
+        # Only return gesture data if hands were detected
+        if detection['has_hands']:
+            return jsonify({
+                'status': 'hand_detected',
+                'hands_detected': detection['hands_detected'],
+                'detected_sign': detection['detected_sign'],
+                'gestures': detection['gestures'],
+                'confidence': detection['confidence'],
+                'hand_positions': detection['hand_positions']
+            }), 200
+        else:
+            return jsonify({
+                'status': 'no_hand',
+                'hands_detected': 0,
+                'detected_sign': None,
+                'confidence': 0.0
+            }), 200
+            
+    except Exception as e:
+        print(f"Error in transcription API: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e),
+            'hands_detected': 0
+        }), 500
 
 
 @app.route('/api/start-session', methods=['POST'])
@@ -484,6 +517,124 @@ def api_save_session(session_id):
 
 
 # ============================================================================
+# GESTURE TRAINING API
+# ============================================================================
+
+@app.route('/api/train-gesture', methods=['POST'])
+@login_required
+def api_train_gesture():
+    """
+    Train the sign detector on a new ASL gesture
+    Users can teach the system custom signs
+    """
+    try:
+        data = request.get_json()
+        
+        if not data or 'gesture_name' not in data or 'frame' not in data:
+            return jsonify({
+                'status': 'error',
+                'message': 'Missing gesture_name or frame data'
+            }), 400
+        
+        gesture_name = data['gesture_name'].upper().strip()
+        frame_data = data['frame']
+        
+        # Limit gesture name length
+        if len(gesture_name) > 50:
+            return jsonify({
+                'status': 'error',
+                'message': 'Gesture name too long (max 50 characters)'
+            }), 400
+        
+        # Detect Hand gesture in frame
+        detection = sign_detector.detect_signs(frame_data)
+        
+        # Only train if hands are detected
+        if not detection['has_hands']:
+            return jsonify({
+                'status': 'error',
+                'message': 'No hands detected in frame. Please show your hand clearly.'
+            }), 400
+        
+        # Get landmarks from first detected hand
+        if detection['landmarks'] and len(detection['landmarks']) > 0:
+            landmarks = detection['landmarks'][0]
+            
+            # Train the gesture
+            sign_detector.train_gesture(gesture_name, landmarks)
+            
+            return jsonify({
+                'status': 'success',
+                'message': f'Gesture "{gesture_name}" trained successfully',
+                'gesture_name': gesture_name,
+                'samples': sign_detector.get_gesture_samples(gesture_name)
+            }), 200
+        else:
+            return jsonify({
+                'status': 'error',
+                'message': 'Could not extract hand landmarks'
+            }), 400
+            
+    except Exception as e:
+        print(f"Error training gesture: {e}")
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/trained-gestures', methods=['GET'])
+@login_required
+def api_list_trained_gestures():
+    """
+    Get list of all trained custom gestures
+    """
+    try:
+        trained = sign_detector.get_trained_gestures()
+        
+        # Get sample counts for each gesture
+        gesture_info = {}
+        for gesture in trained:
+            gesture_info[gesture] = {
+                'samples': sign_detector.get_gesture_samples(gesture)
+            }
+        
+        return jsonify({
+            'status': 'success',
+            'trained_gestures': gesture_info,
+            'total': len(trained)
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+@app.route('/api/clear-training', methods=['POST'])
+@login_required
+@admin_required
+def api_clear_training():
+    """
+    Clear all trained custom gestures (admin only)
+    """
+    try:
+        sign_detector.clear_gesture_training()
+        
+        return jsonify({
+            'status': 'success',
+            'message': 'All trained gestures cleared'
+        }), 200
+        
+    except Exception as e:
+        return jsonify({
+            'status': 'error',
+            'message': str(e)
+        }), 500
+
+
+# ============================================================================
 # ERROR HANDLERS
 # ============================================================================
 
@@ -525,7 +676,7 @@ def init_db():
     if User.query.filter_by(username='admin').first() is None:
         admin = User(
             username='admin',
-            email='admin@signatranslate.com',
+            email='admin@sign.com',
             full_name='Administrator',
             role='admin'
         )

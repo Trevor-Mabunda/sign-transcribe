@@ -1,6 +1,6 @@
 ╔══════════════════════════════════════════════════════════════════════════════╗
 ║                                                                              ║
-║                 🎉 SignaTranslate - PROJECT COMPLETION REPORT 🎉            ║
+║                 🎉 Sign - PROJECT COMPLETION REPORT 🎉            ║
 ║                                                                              ║
 ║              AI-Powered Sign Language Transcriber Application                ║
 ║                                                                              ║
@@ -234,8 +234,8 @@ Production (Gunicorn):
   $ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 Docker:
-  $ docker build -t signatranslate .
-  $ docker run -p 5000:5000 signatranslate
+  $ docker build -t sign .
+  $ docker run -p 5000:5000 sign
 
 Cloud (Heroku, AWS, GCP, Azure):
   Application is ready for cloud deployment
@@ -347,7 +347,7 @@ Failed: 0
 
 ═══════════════════════════════════════════════════════════════════════════════
 
-SignaTranslate - Breaking Communication Barriers with AI 🤟
+Sign - Breaking Communication Barriers with AI 🤟
 
 Built with ❤️ for accessibility and inclusion.
 

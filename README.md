@@ -1,10 +1,10 @@
-# SignaTranslate - AI-Powered Sign Language Transcriber
+# Sign - AI-Powered Sign Language Transcriber
 
 > A production-ready web application for real-time sign language transcription powered by artificial intelligence.
 
 ## 🎯 Project Overview
 
-SignaTranslate is a full-stack Flask application designed to make sign language accessible through AI. It enables:
+Sign is a full-stack Flask application designed to make sign language accessible through AI. It enables:
 
 - **Sign Language Users** to transcribe gestures into text in real-time
 - **Administrators** to manage users, transcripts, and system analytics
@@ -205,7 +205,7 @@ Edit `config.py` or use environment variables:
 
 ```python
 # Database
-DATABASE_URL = 'sqlite:///signatranslate.db'
+DATABASE_URL = 'sqlite:///sign.db'
 
 # Sign Detection
 MODEL_CONFIG = {
@@ -232,8 +232,8 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 
 ### Using Docker
 ```bash
-docker build -t signatranslate .
-docker run -p 5000:5000 signatranslate
+docker build -t sign .
+docker run -p 5000:5000 sign
 ```
 
 ### Environment Setup
@@ -320,14 +320,14 @@ This project demonstrates:
 
 ## 📞 Support & Contact
 
-- 📧 Email: support@signatranslate.com
+- 📧 Email: support@sign.com
 - 🐛 Issues: [GitHub Issues](https://github.com/ily6ix/sign-transcriber/issues)
 - 💬 Discussions: [GitHub Discussions](https://github.com/ily6ix/sign-transcriber/discussions)
 
 ---
 
-**SignaTranslate** - Making Sign Language Accessible Through AI 🤟
+**Sign** - Making Sign Language Accessible Through AI 🤟
 
 Built with ❤️ for accessibility and inclusion.
 
-[⬆ Back to Top](#signatranslate---ai-powered-sign-language-transcriber)
+[⬆ Back to Top](#sign---ai-powered-sign-language-transcriber)

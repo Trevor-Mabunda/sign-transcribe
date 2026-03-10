@@ -2,7 +2,7 @@ import os
 from datetime import timedelta
 
 # Database Configuration
-SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///signatranslate.db')
+SQLALCHEMY_DATABASE_URI = os.getenv('DATABASE_URL', 'sqlite:///sign.db')
 SQLALCHEMY_TRACK_MODIFICATIONS = False
 
 # Secret Key

@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{% block title %}SignaTranslate - AI Sign Language Transcriber{% endblock %}</title>
+    <title>{% block title %}Sign - AI Sign Language Transcriber{% endblock %}</title>
     <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
     {% block extra_css %}{% endblock %}
 </head>
@@ -13,7 +13,7 @@
         <div class="container">
             <div class="logo">
                 <span class="logo-icon">S</span>
-                <span class="logo-text">SignaTranslate</span>
+                <span class="logo-text">Sign</span>
             </div>
             <ul class="nav-links">
                 {% if current_user.is_authenticated %}
@@ -57,7 +57,7 @@
         <div class="container">
             <div class="footer-content">
                 <div class="footer-section">
-                    <h4>SignaTranslate</h4>
+                    <h4>Sign</h4>
                     <p>Making sign language accessible to all through AI technology.</p>
                 </div>
                 <div class="footer-section">

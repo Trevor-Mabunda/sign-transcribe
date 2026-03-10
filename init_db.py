@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 """
-Quick Setup Script for SignaTranslate
+Quick Setup Script for Sign
 Initializes database and creates admin user
 """
 
@@ -25,7 +25,7 @@ def create_admin_user():
         
         admin = User(
             username='admin',
-            email='admin@signatranslate.com',
+            email='admin@sign.com',
             full_name='Administrator',
             role='admin'
         )
@@ -72,7 +72,7 @@ def seed_sign_data():
 def main():
     """Run initialization sequence"""
     print("=" * 50)
-    print("SignaTranslate - Initialization Script")
+    print("Sign - Initialization Script")
     print("=" * 50)
     print()
     

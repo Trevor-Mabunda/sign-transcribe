@@ -1,6 +1,6 @@
 {% extends "base.html" %}
 
-{% block title %}Transcribe - SignaTranslate{% endblock %}
+{% block title %}Transcribe - Sign{% endblock %}
 
 {% block content %}
 <div class="container transcribe-container">
@@ -274,11 +274,13 @@
 </style>
 
 <script>
-// WebRTC and sign detection setup
+// Real-time Hand Gesture Detection with MediaPipe
 let mediaStream = null;
 let isRecording = false;
 let detectionInterval = null;
 let detectedSigns = [];
+let lastDetectionTime = 0;
+let detectionThrottle = 250; // ms between detections
 
 const videoElement = document.getElementById('webcam');
 const startBtn = document.getElementById('startBtn');
@@ -303,8 +305,10 @@ async function startRecording() {
         isRecording = true;
         startBtn.disabled = true;
         stopBtn.disabled = false;
-        liveTranscription.textContent = '';
+        liveTranscription.textContent = 'Waiting for hand gestures...';
+        liveTranscription.style.color = '#9ca3af';
         detectedSigns = [];
+        lastDetectionTime = 0;
         
         // Start sign detection loop
         startSignDetection();
@@ -327,13 +331,20 @@ function stopRecording() {
         clearInterval(detectionInterval);
     }
     
-    // Compile final transcript
+    liveTranscription.style.color = '#374151';
     compileFinalTranscript();
 }
 
 async function startSignDetection() {
     detectionInterval = setInterval(async () => {
         if (!isRecording) return;
+        
+        // Throttle detections to avoid overwhelming the server
+        const now = Date.now();
+        if (now - lastDetectionTime < detectionThrottle) {
+            return;
+        }
+        lastDetectionTime = now;
         
         try {
             const canvas = document.getElementById('canvas');
@@ -342,38 +353,66 @@ async function startSignDetection() {
             canvas.height = videoElement.videoHeight;
             ctx.drawImage(videoElement, 0, 0);
             
-            // Send frame to backend for detection
+            // Convert canvas to blob and send to backend
             canvas.toBlob(async (blob) => {
                 const formData = new FormData();
-                formData.append('frame', blob);
+                formData.append('frame', blob, 'frame.jpg');
                 
-                const response = await fetch('/api/transcribe', {
-                    method: 'POST',
-                    body: JSON.stringify({ frame: blob }),
-                    headers: { 'Content-Type': 'application/json' }
-                });
-                
-                const data = await response.json();
-                if (data.detected_sign) {
-                    detectedSigns.push(data.detected_sign);
-                    liveTranscription.textContent = detectedSigns.join(' ');
-                    confidenceScore.textContent = Math.round(data.confidence * 100) + '%';
+                try {
+                    const response = await fetch('/api/transcribe', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    // Only process if hands were detected
+                    if (data.status === 'hand_detected' && data.hands_detected > 0) {
+                        // Update confidence score
+                        const confPercent = Math.round(data.confidence * 100);
+                        confidenceScore.textContent = confPercent + '%';
+                        
+                        // Add detected gesture(s)
+                        if (data.detected_sign && data.detected_sign !== 'unknown') {
+                            // Avoid duplicate consecutive signs
+                            if (detectedSigns.length === 0 || 
+                                detectedSigns[detectedSigns.length - 1] !== data.detected_sign) {
+                                detectedSigns.push(data.detected_sign);
+                                liveTranscription.textContent = detectedSigns.join(' ');
+                                liveTranscription.style.color = '#10b981'; // Green for active detection
+                            }
+                        }
+                        
+                        // Update UI to show hand was detected
+                        console.log(`Hand(s) detected: ${data.hands_detected}, Gesture: ${data.detected_sign}, Confidence: ${confPercent}%`);
+                    } else if (data.status === 'no_hand') {
+                        // No hands detected - show waiting message
+                        if (detectedSigns.length === 0) {
+                            liveTranscription.textContent = 'Waiting for hand gestures...';
+                            liveTranscription.style.color = '#9ca3af';
+                        }
+                        confidenceScore.textContent = '0%';
+                    }
+                } catch (fetchError) {
+                    console.error('Error sending frame for detection:', fetchError);
                 }
-            });
+            }, 'image/jpeg', 0.8); // Compress JPEG for faster transmission
+            
         } catch (error) {
             console.error('Error in sign detection:', error);
         }
-    }, 500); // Check every 500ms
+    }, 100); // Process frames frequently, but throttle sends
 }
 
 function compileFinalTranscript() {
     const transcript = detectedSigns.join(' ');
-    finalTranscript.value = transcript;
+    finalTranscript.value = transcript || '';
 }
 
 function clearTranscription() {
     detectedSigns = [];
-    liveTranscription.textContent = 'Signs will appear here as they\'re detected...';
+    liveTranscription.textContent = 'Waiting for hand gestures...';
+    liveTranscription.style.color = '#9ca3af';
     finalTranscript.value = '';
     confidenceScore.textContent = '0%';
 }

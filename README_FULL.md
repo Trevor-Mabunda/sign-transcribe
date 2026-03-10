@@ -1,8 +1,8 @@
-# SignaTranslate - AI-Powered Sign Language Transcriber
+# Sign - AI-Powered Sign Language Transcriber
 
 ## Project Overview
 
-SignaTranslate is a production-oriented web application that enables real-time transcription of sign language to text using artificial intelligence. It serves both sign language users who need transcription services and administrators who manage the system.
+Sign is a production-oriented web application that enables real-time transcription of sign language to text using artificial intelligence. It serves both sign language users who need transcription services and administrators who manage the system.
 
 ## Features
 
@@ -195,7 +195,7 @@ Edit `config.py` to customize:
 
 ```python
 # Database
-SQLALCHEMY_DATABASE_URI = 'sqlite:///signatranslate.db'
+SQLALCHEMY_DATABASE_URI = 'sqlite:///sign.db'
 
 # Sign Detection
 MODEL_CONFIG = {
@@ -272,7 +272,7 @@ Create a `.env` file:
 ```bash
 FLASK_ENV=development
 SECRET_KEY=your-secret-key-here
-DATABASE_URL=sqlite:///signatranslate.db
+DATABASE_URL=sqlite:///sign.db
 DEBUG=True
 ```
 
@@ -288,14 +288,14 @@ gunicorn -w 4 -b 0.0.0.0:5000 app:app
 ### Using Docker
 
 ```bash
-docker build -t signatranslate .
-docker run -p 5000:5000 signatranslate
+docker build -t sign .
+docker run -p 5000:5000 sign
 ```
 
 ### Environment Setup
 ```bash
 # Production database (PostgreSQL)
-DATABASE_URL=postgresql://user:password@localhost/signatranslate
+DATABASE_URL=postgresql://user:password@localhost/sign
 
 # Production secret
 SECRET_KEY=$(python -c 'import secrets; print(secrets.token_hex(32))')
@@ -363,4 +363,4 @@ For issues and feature requests, open an issue on GitHub.
 
 ---
 
-**SignaTranslate** - Breaking Communication Barriers with AI 🤟
+**Sign** - Breaking Communication Barriers with AI 🤟
