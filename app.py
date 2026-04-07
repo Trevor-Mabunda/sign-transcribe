@@ -6,7 +6,6 @@ from flask_login import LoginManager, login_user, logout_user, login_required, c
 from functools import wraps
 from models import db, User, Transcript, AuditLog, SignDataset
 from forms import RegistrationForm, LoginForm, CreateUserForm, EditUserForm, TranscriptForm
-from sign_detector import initialize_detector
 from export_utils import TranscriptExporter, get_export_options
 from config import *
 
@@ -22,7 +21,14 @@ login_manager.login_view = 'auth.login'
 login_manager.login_message = 'Please log in to access this page.'
 
 # Initialize sign detector (real-time hand tracking with MediaPipe)
-sign_detector = initialize_detector()
+# Deferred import to handle headless environments
+sign_detector = None
+try:
+    from sign_detector import initialize_detector
+    sign_detector = initialize_detector()
+except ImportError as e:
+    print(f"Warning: Sign detector initialization failed: {e}")
+    print("The application will run but sign detection features will be unavailable.")
 
 
 @login_manager.user_loader
